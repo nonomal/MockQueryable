@@ -23,7 +23,7 @@ Extensions for mocking [Entity Framework Core](https://github.com/dotnet/efcore)
 ---
 
 ## ✅ Build & Status
-[![codecov](https://codecov.io/github/romantitov/MockQueryable/graph/badge.svg?token=dtiYMUNHUo)](https://codecov.io/github/romantitov/MockQueryable)
+[![codecov](https://codecov.io/gh/ramantsitou/MockQueryable/graph/badge.svg?token=dtiYMUNHUo)](https://codecov.io/gh/ramantsitou/MockQueryable)
 [![build](https://github.com/romantitov/MockQueryable/workflows/build/badge.svg)](https://github.com/ramantsitou/MockQueryable/actions/workflows/build.yml)
 [![License](https://img.shields.io/github/license/romantitov/MockQueryable.svg)](https://github.com/romantitov/MockQueryable/blob/master/LICENSE)
 
