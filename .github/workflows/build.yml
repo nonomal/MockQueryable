@@ -1,0 +1,55 @@
+name: build
+
+on:
+  push:
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_VERSION: 10.0.x
+  SOLUTION: src/MockQueryable/*.sln
+  CONFIGURATION: Release
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build
+        uses: ./.github/actions/dotnet-build
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+          solution: ${{ env.SOLUTION }}
+          configuration: ${{ env.CONFIGURATION }}
+
+      - name: Test with coverage
+        run: |
+          mkdir -p TestResults
+
+          dotnet test ${{ env.SOLUTION }} \
+            --configuration ${{ env.CONFIGURATION }} \
+            --no-build \
+            /p:CollectCoverage=true \
+            /p:CoverletOutput="$(pwd)/TestResults/coverage.opencover.xml" \
+            /p:CoverletOutputFormat=opencover
+
+          ls -R TestResults
+
+      - name: Upload coverage results
+        uses: actions/upload-artifact@v7
+        with:
+          name: code-coverage
+          path: TestResults
+          if-no-files-found: error
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v7
+        with:
+          files: ./TestResults/coverage.opencover.xml
+          flags: unittests
+          fail_ci_if_error: false
+          disable_search: true
+          token: ${{ secrets.CODECOV_TOKEN }}

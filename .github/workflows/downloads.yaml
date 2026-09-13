@@ -1,0 +1,74 @@
+name: Update Download Badge
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  downloads:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Generate badge
+        shell: bash
+        run: |
+          packages=(
+            MockQueryable.Core
+            MockQueryable.EntityFrameworkCore
+            MockQueryable.Moq
+            MockQueryable.NSubstitute
+            MockQueryable.FakeItEasy
+          )
+
+          total=0
+
+          for pkg in "${packages[@]}"; do
+            url="https://azuresearch-usnc.nuget.org/query?q=packageid:${pkg}&prerelease=true&semVerLevel=2.0.0"
+          
+            count=$(curl -fsSL "$url" \
+              | jq --arg pkg "$pkg" '
+                  [.data[]
+                   | select((.id | ascii_downcase) == ($pkg | ascii_downcase))
+                   | .totalDownloads
+                  ][0] // 0
+                ')
+          
+            echo "$pkg: $count"
+          
+            total=$((total + count))
+          done
+
+          if [ "$total" -ge 1000000 ]; then
+            display=$(awk "BEGIN {printf \"%.1fM\", $total/1000000}")
+          elif [ "$total" -ge 1000 ]; then
+            display=$(awk "BEGIN {printf \"%.1fK\", $total/1000}")
+          else
+            display="$total"
+          fi
+
+          mkdir -p .github/badges
+
+          cat > .github/badges/downloads.json <<EOF
+          {
+            "schemaVersion": 1,
+            "label": "Total Downloads",
+            "message": "$display",
+            "color": "brightgreen"
+          }
+          EOF
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v8
+        with:
+          commit-message: Update download badge
+          title: Update download badge
+          body: Automated update of total NuGet downloads badge.
+          branch: automation/update-download-badge
+          delete-branch: true
+          add-paths: |
+            .github/badges/downloads.json

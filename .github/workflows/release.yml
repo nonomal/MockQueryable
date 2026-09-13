@@ -1,0 +1,67 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+  artifact-metadata: write
+
+env:
+  DOTNET_VERSION: 10.0.x
+  SOLUTION: src/MockQueryable/*.sln
+  CONFIGURATION: Release
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build
+        uses: ./.github/actions/dotnet-build
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+          solution: ${{ env.SOLUTION }}
+          configuration: ${{ env.CONFIGURATION }}
+
+      - name: Pack
+        run: |
+          mkdir -p artifacts
+          dotnet pack ${{ env.SOLUTION }} \
+            --configuration ${{ env.CONFIGURATION }} \
+            --no-build \
+            --output ./artifacts
+
+      - name: Attest NuGet packages
+        uses: actions/attest@v4
+        with:
+          subject-path: './artifacts/*.nupkg'
+
+      - name: NuGet login
+        uses: NuGet/login@v1
+        id: nuget-login
+        with:
+          user: KeMiK
+
+      - name: Publish to NuGet
+        env:
+          NUGET_API_KEY: ${{ steps.nuget-login.outputs.NUGET_API_KEY }}
+        run: |
+          dotnet nuget push "./artifacts/*.nupkg" \
+            --api-key "$NUGET_API_KEY" \
+            --source https://api.nuget.org/v3/index.json \
+            --skip-duplicate    
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          files: ./artifacts/*.nupkg
+          generate_release_notes: true
+          # prerelease if a tag contains "-"
+          prerelease: ${{ contains(github.ref_name, '-') }}

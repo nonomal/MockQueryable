@@ -1,0 +1,21 @@
+# Please see the documentation for all configuration options:
+# https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+
+version: 2
+updates:
+  - package-ecosystem: "nuget" 
+    directories:
+      - "/src/MockQueryable/MockQueryable.Core"
+      - "/src/MockQueryable/MockQueryable.EntityFrameworkCore"
+      - "/src/MockQueryable/MockQueryable.Moq"
+      - "/src/MockQueryable/MockQueryable.NSubstitute"
+      - "/src/MockQueryable/MockQueryable.FakeItEasy"
+      - "/src/MockQueryable/MockQueryable.Sample"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+
